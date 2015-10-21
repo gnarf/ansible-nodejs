@@ -1,0 +1,17 @@
+- name: apt dependencies
+  apt: package={{ item }} state=present update_cache=yes
+  with_items:
+    - curl
+    # Ensure things that might need to node-gyp to compile have all the build tools
+    - build-essential
+
+- name: Detect current_nodejs_version
+  command: "node -v"
+  changed_when: false
+  register: current_nodejs_version
+  ignore_errors: yes
+
+- name: Install node
+  script: nave.sh usemain {{ nodejs_version }}
+  when: current_nodejs_version|failed or current_nodejs_version.stdout != "v{{ nodejs_version }}"
+  register: nodejs_version_installed
